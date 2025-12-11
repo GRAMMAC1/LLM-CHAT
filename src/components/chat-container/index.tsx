@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import { streamText, type CoreMessage } from "ai";
+import { streamText, type CoreMessage, tool } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { Bubble, Think } from "@ant-design/x";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
 import { message as antdMessage } from "antd";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import z from "zod";
 
 // Components
 import { ChatHeader } from "../chat-header";
@@ -17,6 +18,25 @@ import "./index.css";
 const STORAGE_KEY = "llm-chat-history";
 const API_KEY_STORAGE_KEY = "llm-chat-api-key";
 const MODEL_STORAGE_KEY = "llm-chat-model";
+
+type ToolResult = {
+  result: number;
+};
+
+const sumTool = tool({
+  description: "计算两个数字的和(Calculate the sum of two numbers.)",
+  inputSchema: z.object({
+    a: z.number().describe("第一个数字 (The first number)"),
+    b: z.number().describe("第二个数字 (The second number)"),
+  }),
+  execute: async ({ a, b }: { a: number; b: number }) => {
+    console.log(`Calculating sum of ${a} and ${b}`);
+    return { result: a + b };
+  },
+  outputSchema: z.object({
+    result: z.number().describe("两个数字的和 (The sum of the two numbers)"),
+  }),
+});
 
 interface ChatMessage {
   id: string;
@@ -132,17 +152,32 @@ export const Chat: React.FC = () => {
         model: deepseek(deepThink ? "deepseek-reasoner" : modelName),
         messages: coreMessages,
         abortSignal: abortControllerRef.current.signal,
+        tools: {
+          sum: sumTool,
+        },
       });
 
       let answer = "";
       let reasonThinkProcess = "";
       for await (const textPart of result.fullStream) {
+        console.log("Received text part:", textPart);
         if (textPart.type === "reasoning-delta") {
           reasonThinkProcess += textPart.text;
         }
 
         if (textPart.type === "text-delta") {
           answer += textPart.text;
+        }
+
+        if (textPart.type === "tool-call") {
+          answer += `\n\n[Tool Called: ${textPart.toolName}]\n\n`;
+        }
+
+        if (textPart.type === "tool-result") {
+          const toolOutput = textPart.output as ToolResult;
+          answer += `\n\n[Tool Result: ${
+            textPart.toolName
+          } returned ${JSON.stringify(toolOutput.result)}]\n\n`;
         }
 
         const updated = [...newMessages];
