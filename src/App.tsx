@@ -1,5 +1,7 @@
 import { ConfigProvider } from 'antd';
-import Chat from './components/Chat';
+import Chat from './components/chat';
+
+// Styles
 import './App.css';
 
 const App = () => {

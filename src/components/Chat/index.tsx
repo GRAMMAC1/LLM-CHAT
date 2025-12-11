@@ -1,26 +1,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import { streamText, type CoreMessage } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
-import { Bubble, Sender, ThoughtChain } from "@ant-design/x";
-import {
-  UserOutlined,
-  RobotOutlined,
-  DeleteOutlined,
-  PauseCircleOutlined,
-  PlayCircleOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
-import {
-  Button,
-  Space,
-  Modal,
-  Input,
-  Form,
-  message as antdMessage,
-} from "antd";
+import { Bubble, ThoughtChain } from "@ant-design/x";
+import { UserOutlined, RobotOutlined } from "@ant-design/icons";
+import { message as antdMessage } from "antd";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import "./styles.css";
+
+// Components
+import { ChatHeader } from "../chat-header";
+import { ChatFooter } from "../chat-footer";
+import { Settings } from "../settings";
+
+import "./index.css";
 
 const STORAGE_KEY = "llm-chat-history";
 const API_KEY_STORAGE_KEY = "llm-chat-api-key";
@@ -202,25 +194,12 @@ const Chat: React.FC = () => {
 
   return (
     <div className="chat-layout">
-      <div className="chat-header">
-        <div style={{ fontWeight: "bold", fontSize: 18 }}>LLM Chat</div>
-        <Space>
-          <Button
-            icon={<SettingOutlined />}
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            Settings
-          </Button>
-          <Button
-            icon={<DeleteOutlined />}
-            onClick={clearHistory}
-            danger
-            type="text"
-          >
-            Clear History
-          </Button>
-        </Space>
-      </div>
+      <ChatHeader
+        onClearHistory={clearHistory}
+        onOpenSettings={() => {
+          setIsSettingsOpen(true);
+        }}
+      />
 
       <div className="chat-content">
         <div className="chat-list-container">
@@ -248,66 +227,22 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      <div className="chat-footer">
-        <div className="chat-input-container">
-          <Sender
-            value={input}
-            onChange={setInput}
-            onSubmit={() => {
-              if (!input.trim()) return;
-              handleSend(input);
-            }}
-            loading={isLoading}
-            onCancel={stop}
-            placeholder="Type a message..."
-            header={
-              isLoading ? (
-                <Button
-                  type="text"
-                  icon={<PauseCircleOutlined />}
-                  onClick={stop}
-                >
-                  Stop
-                </Button>
-              ) : messages.length > 0 &&
-                messages[messages.length - 1].role === "assistant" ? (
-                <Button
-                  type="text"
-                  icon={<PlayCircleOutlined />}
-                  onClick={() => handleSend("", true)}
-                >
-                  Regenerate
-                </Button>
-              ) : null
-            }
-          />
-        </div>
-      </div>
+      <ChatFooter
+        input={input}
+        setInput={setInput}
+        isLoading={isLoading}
+        handleSend={handleSend}
+        stop={stop}
+        messages={messages}
+      />
 
-      <Modal
-        title="Settings"
-        open={isSettingsOpen}
-        onCancel={() => setIsSettingsOpen(false)}
-        footer={null}
-      >
-        <Form
-          layout="vertical"
-          onFinish={saveSettings}
-          initialValues={{ apiKey, modelName }}
-        >
-          <Form.Item label="API Key" name="apiKey" rules={[{ required: true }]}>
-            <Input.Password placeholder="sk-..." />
-          </Form.Item>
-          <Form.Item label="Model Name" name="modelName">
-            <Input placeholder="deepseek-chat" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Save
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+      <Settings
+        isSettingsOpen={isSettingsOpen}
+        setIsSettingsOpen={setIsSettingsOpen}
+        apiKey={apiKey}
+        modelName={modelName}
+        saveSettings={saveSettings}
+      />
     </div>
   );
 };

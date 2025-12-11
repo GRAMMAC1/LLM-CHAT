@@ -1,0 +1,8 @@
+.chat-header {
+  padding: var(--chat-padding);
+  background-color: var(--chat-container-bg);
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

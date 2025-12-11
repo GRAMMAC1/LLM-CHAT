@@ -1,3 +1,14 @@
+:root {
+  --chat-bg-color: #f5f5f5;
+  --chat-container-bg: #ffffff;
+  --chat-primary-color: #1677ff;
+  --chat-text-color: #333333;
+  --chat-secondary-text-color: #888888;
+  --chat-border-radius: 8px;
+  --chat-padding: 16px;
+  --chat-max-width: 800px;
+}
+
 body {
   margin: 0;
   color: #fff;
