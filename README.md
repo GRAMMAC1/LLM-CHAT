@@ -1,4 +1,7 @@
-# Rsbuild project
+# LLM CHAT DEMO
+
+大模型对话框 demo，使用 React18 和 Rsbuild 实现。
+组件库使用 ant-design-x
 
 ## Setup
 
@@ -27,10 +30,3 @@ Preview the production build locally:
 ```bash
 pnpm run preview
 ```
-
-## Learn more
-
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
