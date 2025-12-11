@@ -1,31 +1,45 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { streamText, type CoreMessage } from 'ai';
-import { createDeepSeek } from '@ai-sdk/deepseek';
-import { Bubble, Sender, ThoughtChain } from '@ant-design/x';
-import { UserOutlined, RobotOutlined, DeleteOutlined, PauseCircleOutlined, PlayCircleOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Space, Modal, Input, Form, message as antdMessage } from 'antd';
-import ReactMarkdown from 'react-markdown';
-import './styles.css';
+import React, { useEffect, useState, useRef } from "react";
+import { streamText, type CoreMessage } from "ai";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { Bubble, Sender, ThoughtChain } from "@ant-design/x";
+import {
+  UserOutlined,
+  RobotOutlined,
+  DeleteOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  Space,
+  Modal,
+  Input,
+  Form,
+  message as antdMessage,
+} from "antd";
+import ReactMarkdown from "react-markdown";
+import "./styles.css";
 
-const STORAGE_KEY = 'llm-chat-history';
-const API_KEY_STORAGE_KEY = 'llm-chat-api-key';
-const MODEL_STORAGE_KEY = 'llm-chat-model';
+const STORAGE_KEY = "llm-chat-history";
+const API_KEY_STORAGE_KEY = "llm-chat-api-key";
+const MODEL_STORAGE_KEY = "llm-chat-model";
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
 const Chat: React.FC = () => {
   // Settings state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [modelName, setModelName] = useState('deepseek-chat');
-  
+  const [apiKey, setApiKey] = useState("");
+  const [modelName, setModelName] = useState("deepseek-chat");
+
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -41,7 +55,7 @@ const Chat: React.FC = () => {
       try {
         setMessages(JSON.parse(storedHistory));
       } catch (e) {
-        console.error('Failed to parse history', e);
+        console.error("Failed to parse history", e);
       }
     }
   }, []);
@@ -61,7 +75,7 @@ const Chat: React.FC = () => {
     localStorage.setItem(API_KEY_STORAGE_KEY, values.apiKey);
     localStorage.setItem(MODEL_STORAGE_KEY, values.modelName);
     setIsSettingsOpen(false);
-    antdMessage.success('Settings saved');
+    antdMessage.success("Settings saved");
   };
 
   const clearHistory = () => {
@@ -80,26 +94,33 @@ const Chat: React.FC = () => {
   const handleSend = async (content: string, isRegenerate = false) => {
     if (!apiKey) {
       setIsSettingsOpen(true);
-      antdMessage.warning('Please set your API Key first');
+      antdMessage.warning("Please set your API Key first");
       return;
     }
 
     const deepseek = createDeepSeek({
       apiKey: apiKey,
-      baseURL: 'https://api.deepseek.com',
+      baseURL: "https://api.deepseek.com",
     });
 
     let newMessages = [...messages];
     if (!isRegenerate) {
-      const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content };
+      const userMsg: ChatMessage = {
+        id: Date.now().toString(),
+        role: "user",
+        content,
+      };
       newMessages.push(userMsg);
       setMessages(newMessages);
-      setInput('');
+      setInput("");
     } else {
-      // For regenerate, we assume the last message was assistant and we remove it, 
+      // For regenerate, we assume the last message was assistant and we remove it,
       // or if it was user, we just re-run.
       // If the last message is assistant, remove it to regenerate.
-      if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+      if (
+        newMessages.length > 0 &&
+        newMessages[newMessages.length - 1].role === "assistant"
+      ) {
         newMessages.pop();
       }
     }
@@ -109,35 +130,44 @@ const Chat: React.FC = () => {
 
     const assistantMsgId = Date.now().toString();
     // Add a placeholder assistant message
-    setMessages([...newMessages, { id: assistantMsgId, role: 'assistant', content: '' }]);
+    setMessages([
+      ...newMessages,
+      { id: assistantMsgId, role: "assistant", content: "" },
+    ]);
 
     try {
-      const coreMessages: CoreMessage[] = newMessages.map(m => ({ role: m.role, content: m.content }));
-      
+      const coreMessages: CoreMessage[] = newMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const result = streamText({
         model: deepseek(modelName),
         messages: coreMessages,
         abortSignal: abortControllerRef.current.signal,
       });
 
-      let fullContent = '';
+      let fullContent = "";
       for await (const textPart of result.textStream) {
         fullContent += textPart;
-        // Use functional update to ensure we have latest state if needed, 
+        // Use functional update to ensure we have latest state if needed,
         // but here we just need to update the last message
-        setMessages(prev => {
+        setMessages((prev) => {
           const updated = [...prev];
-          const lastIndex = updated.findIndex(m => m.id === assistantMsgId);
+          const lastIndex = updated.findIndex((m) => m.id === assistantMsgId);
           if (lastIndex !== -1) {
-            updated[lastIndex] = { ...updated[lastIndex], content: fullContent };
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              content: fullContent,
+            };
           }
           return updated;
         });
       }
     } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        console.error('Chat error:', error);
-        antdMessage.error('Failed to generate response: ' + error.message);
+      if (error.name !== "AbortError") {
+        console.error("Chat error:", error);
+        antdMessage.error("Failed to generate response: " + error.message);
       }
     } finally {
       setIsLoading(false);
@@ -149,43 +179,49 @@ const Chat: React.FC = () => {
     // Simple parser to extract <think> blocks
     const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
     const thinkContent = thinkMatch ? thinkMatch[1] : null;
-    const mainContent = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+    const mainContent = content.replace(/<think>[\s\S]*?<\/think>/, "").trim();
 
     return (
       <div>
         {thinkContent && (
-          <ThoughtChain 
-            items={[{ title: 'Thinking Process', content: thinkContent }]} 
+          <ThoughtChain
+            items={[{ title: "Thinking Process", content: thinkContent }]}
             style={{ marginBottom: 12 }}
           />
         )}
         {mainContent && <ReactMarkdown>{mainContent}</ReactMarkdown>}
-        {!thinkContent && !mainContent && content && <ReactMarkdown>{content}</ReactMarkdown>}
+        {!thinkContent && !mainContent && content && (
+          <ReactMarkdown>{content}</ReactMarkdown>
+        )}
       </div>
     );
   };
 
   const items = messages.map((msg) => ({
     key: msg.id,
-    loading: isLoading && msg.role === 'assistant' && msg.id === messages[messages.length - 1].id && !msg.content,
+    loading:
+      isLoading &&
+      msg.role === "assistant" &&
+      msg.id === messages[messages.length - 1].id &&
+      !msg.content,
     role: msg.role,
     content: renderMessageContent(msg.content),
-    avatar: msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />,
+    avatar: msg.role === "user" ? <UserOutlined /> : <RobotOutlined />,
   }));
 
   return (
     <div className="chat-layout">
       <div className="chat-header">
-        <div style={{ fontWeight: 'bold', fontSize: 18 }}>LLM Chat</div>
+        <div style={{ fontWeight: "bold", fontSize: 18 }}>LLM Chat</div>
         <Space>
-          <Button 
-            icon={<SettingOutlined />} 
+          <Button
+            icon={<SettingOutlined />}
             onClick={() => setIsSettingsOpen(true)}
           >
             Settings
           </Button>
-          <Button 
-            icon={<DeleteOutlined />} 
+          <Button
+            icon={<DeleteOutlined />}
             onClick={clearHistory}
             danger
             type="text"
@@ -197,18 +233,25 @@ const Chat: React.FC = () => {
 
       <div className="chat-content">
         <div className="chat-list-container">
-          <Bubble.List 
-            items={items} 
+          <Bubble.List
+            items={items}
             role={{
               user: {
-                placement: 'end',
-                variant: 'shadow',
-                style: { backgroundColor: 'var(--chat-primary-color)', color: '#fff' }
+                placement: "end",
+                variant: 'filled',
+                style: {
+                  backgroundColor: "#fff",
+                  color: "#000",
+                },
               },
               assistant: {
-                placement: 'start',
-                variant: 'outlined',
-              }
+                placement: "start",
+                variant: 'shadow',
+                style: {
+                  backgroundColor: "#fff",
+                  color: "#000",
+                },
+              },
             }}
           />
         </div>
@@ -228,16 +271,23 @@ const Chat: React.FC = () => {
             placeholder="Type a message..."
             header={
               isLoading ? (
-                <Button type="text" icon={<PauseCircleOutlined />} onClick={stop}>
+                <Button
+                  type="text"
+                  icon={<PauseCircleOutlined />}
+                  onClick={stop}
+                >
                   Stop
                 </Button>
-              ) : (
-                messages.length > 0 && messages[messages.length - 1].role === 'assistant' ? (
-                   <Button type="text" icon={<PlayCircleOutlined />} onClick={() => handleSend('', true)}>
-                    Regenerate
-                  </Button>
-                ) : null
-              )
+              ) : messages.length > 0 &&
+                messages[messages.length - 1].role === "assistant" ? (
+                <Button
+                  type="text"
+                  icon={<PlayCircleOutlined />}
+                  onClick={() => handleSend("", true)}
+                >
+                  Regenerate
+                </Button>
+              ) : null
             }
           />
         </div>
