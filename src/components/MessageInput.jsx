@@ -12,7 +12,7 @@ function MessageInput({ onSendMessage, disabled }) {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -25,7 +25,7 @@ function MessageInput({ onSendMessage, disabled }) {
         className="message-textarea"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         placeholder="Type your message..."
         disabled={disabled}
         rows="1"

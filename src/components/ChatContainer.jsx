@@ -6,7 +6,7 @@ import './ChatContainer.css';
 function ChatContainer() {
   const [messages, setMessages] = useState([
     {
-      id: 1,
+      id: crypto.randomUUID(),
       text: 'Hello! How can I help you today?',
       sender: 'bot',
       timestamp: new Date(),
@@ -17,7 +17,7 @@ function ChatContainer() {
   const handleSendMessage = async (text) => {
     // Add user message
     const userMessage = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       text,
       sender: 'user',
       timestamp: new Date(),
@@ -29,7 +29,7 @@ function ChatContainer() {
     // Simulate LLM response (in a real app, this would be an API call)
     setTimeout(() => {
       const botMessage = {
-        id: Date.now() + 1,
+        id: crypto.randomUUID(),
         text: `I received your message: "${text}". This is a demo response. In a production app, this would connect to an actual LLM API like OpenAI, Anthropic, or others.`,
         sender: 'bot',
         timestamp: new Date(),
