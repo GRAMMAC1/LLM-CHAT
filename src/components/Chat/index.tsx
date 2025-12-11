@@ -25,7 +25,7 @@ interface ChatMessage {
   reasoning?: string;
 }
 
-const Chat: React.FC = () => {
+export const Chat: React.FC = () => {
   // Settings state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
@@ -246,5 +246,3 @@ const Chat: React.FC = () => {
     </div>
   );
 };
-
-export default Chat;
