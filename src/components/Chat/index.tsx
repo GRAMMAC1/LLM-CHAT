@@ -174,7 +174,9 @@ const Chat: React.FC = () => {
           </Think>
         )}
 
-        <ReactMarkdown>{content || '正在思考中...'}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {content || "正在思考中..."}
+        </ReactMarkdown>
       </div>
     );
   };
