@@ -38,6 +38,8 @@
 .chat-list-container {
   width: 100%;
   max-width: var(--chat-max-width);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chat-footer {

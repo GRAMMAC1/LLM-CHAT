@@ -114,26 +114,18 @@ const Chat: React.FC = () => {
       setMessages(newMessages);
       setInput("");
     } else {
-      // For regenerate, we assume the last message was assistant and we remove it,
-      // or if it was user, we just re-run.
-      // If the last message is assistant, remove it to regenerate.
-      if (
-        newMessages.length > 0 &&
-        newMessages[newMessages.length - 1].role === "assistant"
-      ) {
-        newMessages.pop();
-      }
+      newMessages.length > 0 && newMessages.pop();
     }
 
     setIsLoading(true);
     abortControllerRef.current = new AbortController();
 
     const assistantMsgId = Date.now().toString();
-    // Add a placeholder assistant message
-    setMessages([
-      ...newMessages,
-      { id: assistantMsgId, role: "assistant", content: "" },
-    ]);
+    newMessages.push({
+      id: assistantMsgId,
+      role: "assistant",
+      content: "",
+    });
 
     try {
       const coreMessages: CoreMessage[] = newMessages.map((m) => ({
@@ -150,19 +142,13 @@ const Chat: React.FC = () => {
       let fullContent = "";
       for await (const textPart of result.textStream) {
         fullContent += textPart;
-        // Use functional update to ensure we have latest state if needed,
-        // but here we just need to update the last message
-        setMessages((prev) => {
-          const updated = [...prev];
-          const lastIndex = updated.findIndex((m) => m.id === assistantMsgId);
-          if (lastIndex !== -1) {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: fullContent,
-            };
-          }
-          return updated;
-        });
+        const updated = [...newMessages];
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          content: fullContent,
+        };
+
+        setMessages(updated);
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -238,7 +224,7 @@ const Chat: React.FC = () => {
             role={{
               user: {
                 placement: "end",
-                variant: 'filled',
+                variant: "filled",
                 style: {
                   backgroundColor: "#fff",
                   color: "#000",
@@ -246,7 +232,7 @@ const Chat: React.FC = () => {
               },
               assistant: {
                 placement: "start",
-                variant: 'shadow',
+                variant: "shadow",
                 style: {
                   backgroundColor: "#fff",
                   color: "#000",
