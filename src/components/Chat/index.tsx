@@ -19,6 +19,7 @@ import {
   message as antdMessage,
 } from "antd";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./styles.css";
 
 const STORAGE_KEY = "llm-chat-history";
@@ -175,7 +176,11 @@ const Chat: React.FC = () => {
             style={{ marginBottom: 12 }}
           />
         )}
-        {mainContent && <ReactMarkdown>{mainContent}</ReactMarkdown>}
+        {mainContent && (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {mainContent}
+          </ReactMarkdown>
+        )}
         {!thinkContent && !mainContent && content && (
           <ReactMarkdown>{content}</ReactMarkdown>
         )}
