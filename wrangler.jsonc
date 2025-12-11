@@ -2,7 +2,7 @@
 //  Docs: https://developers.cloudflare.com/pages/platform/functions/routing/
 
 {
-  "name": "worker-name",
+  "name": "llm-chat",
   "compatibility_date": "2025-12-11",
   "assets": {
     "directory": "./dist"
