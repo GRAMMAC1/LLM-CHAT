@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { streamText, type CoreMessage } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
-import { Bubble, ThoughtChain } from "@ant-design/x";
+import { Bubble, Think } from "@ant-design/x";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
 import { message as antdMessage } from "antd";
 import ReactMarkdown from "react-markdown";
@@ -22,6 +22,7 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  reasoning?: string;
 }
 
 const Chat: React.FC = () => {
@@ -31,6 +32,7 @@ const Chat: React.FC = () => {
   const [modelName, setModelName] = useState("deepseek-chat");
 
   // Chat state
+  const [deepThink, setDeepThink] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -113,32 +115,41 @@ const Chat: React.FC = () => {
     setIsLoading(true);
     abortControllerRef.current = new AbortController();
 
-    const assistantMsgId = Date.now().toString();
-    newMessages.push({
-      id: assistantMsgId,
-      role: "assistant",
-      content: "",
-    });
-
     try {
       const coreMessages: CoreMessage[] = newMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
+      const assistantMsgId = Date.now().toString();
+      newMessages.push({
+        id: assistantMsgId,
+        role: "assistant",
+        content: "",
+      });
+
       const result = streamText({
-        model: deepseek(modelName),
+        model: deepseek(deepThink ? "deepseek-reasoner" : modelName),
         messages: coreMessages,
         abortSignal: abortControllerRef.current.signal,
       });
 
-      let fullContent = "";
-      for await (const textPart of result.textStream) {
-        fullContent += textPart;
+      let answer = "";
+      let reasonThinkProcess = "";
+      for await (const textPart of result.fullStream) {
+        if (textPart.type === "reasoning-delta") {
+          reasonThinkProcess += textPart.text;
+        }
+
+        if (textPart.type === "text-delta") {
+          answer += textPart.text;
+        }
+
         const updated = [...newMessages];
         updated[updated.length - 1] = {
           ...updated[updated.length - 1],
-          content: fullContent,
+          content: answer,
+          reasoning: reasonThinkProcess,
         };
 
         setMessages(updated);
@@ -154,41 +165,24 @@ const Chat: React.FC = () => {
     }
   };
 
-  const renderMessageContent = (content: string) => {
-    // Simple parser to extract <think> blocks
-    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
-    const thinkContent = thinkMatch ? thinkMatch[1] : null;
-    const mainContent = content.replace(/<think>[\s\S]*?<\/think>/, "").trim();
-
+  const renderMessageContent = (content: string, reasoning?: string) => {
     return (
       <div>
-        {thinkContent && (
-          <ThoughtChain
-            items={[{ title: "Thinking Process", content: thinkContent }]}
-            style={{ marginBottom: 12 }}
-          />
+        {reasoning && (
+          <Think title="Thinking Process" style={{ marginBottom: 12 }}>
+            {reasoning}
+          </Think>
         )}
-        {mainContent && (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {mainContent}
-          </ReactMarkdown>
-        )}
-        {!thinkContent && !mainContent && content && (
-          <ReactMarkdown>{content}</ReactMarkdown>
-        )}
+
+        <ReactMarkdown>{content || '正在思考中...'}</ReactMarkdown>
       </div>
     );
   };
 
   const items = messages.map((msg) => ({
     key: msg.id,
-    loading:
-      isLoading &&
-      msg.role === "assistant" &&
-      msg.id === messages[messages.length - 1].id &&
-      !msg.content,
     role: msg.role,
-    content: renderMessageContent(msg.content),
+    content: renderMessageContent(msg.content, msg.reasoning),
     avatar: msg.role === "user" ? <UserOutlined /> : <RobotOutlined />,
   }));
 
@@ -233,6 +227,9 @@ const Chat: React.FC = () => {
         isLoading={isLoading}
         handleSend={handleSend}
         stop={stop}
+        modelName={modelName}
+        deepThink={deepThink}
+        setDeepThink={setDeepThink}
         messages={messages}
       />
 
@@ -241,6 +238,7 @@ const Chat: React.FC = () => {
         setIsSettingsOpen={setIsSettingsOpen}
         apiKey={apiKey}
         modelName={modelName}
+        setDeepThink={setDeepThink}
         saveSettings={saveSettings}
       />
     </div>

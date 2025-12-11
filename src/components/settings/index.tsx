@@ -7,6 +7,7 @@ type SettingsProps = {
   apiKey: string;
   saveSettings: (values: { apiKey: string; modelName: string }) => void;
   modelName: string;
+  setDeepThink: (value: boolean) => void;
 };
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -15,6 +16,7 @@ export const Settings: React.FC<SettingsProps> = ({
   apiKey,
   saveSettings,
   modelName,
+  setDeepThink,
 }: SettingsProps) => {
   const [name, setName] = useState(modelName);
   const [form] = Form.useForm();
@@ -22,6 +24,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const handleModelSelect = (value: string) => {
     form.setFieldValue("modelName", value);
     setName(value);
+    if (value !== "deepseek-chat") setDeepThink(false);
     form.setFieldValue("apiKey", "");
   };
 
