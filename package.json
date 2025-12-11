@@ -1,0 +1,22 @@
+{
+  "name": "llm-chat",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "LLM chat web application built with React and rsbuild",
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
+  },
+  "keywords": ["llm", "chat", "react", "rsbuild"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rsbuild/core": "^1.6.14",
+    "@rsbuild/plugin-react": "^1.4.2"
+  },
+  "dependencies": {
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  }
+}
