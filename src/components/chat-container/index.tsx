@@ -28,7 +28,7 @@ interface ChatMessage {
 export const Chat: React.FC = () => {
   // Settings state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(process.env.apiKey || "");
+  const [apiKey, setApiKey] = useState(process.env.PUBLIC_API_KEY || "");
   const [modelName, setModelName] = useState("deepseek-chat");
 
   // Chat state
