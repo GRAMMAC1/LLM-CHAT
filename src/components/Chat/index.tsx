@@ -86,6 +86,7 @@ const Chat: React.FC = () => {
 
     const deepseek = createDeepSeek({
       apiKey: apiKey,
+      baseURL: 'https://api.deepseek.com',
     });
 
     let newMessages = [...messages];
