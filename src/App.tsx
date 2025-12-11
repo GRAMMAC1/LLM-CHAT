@@ -1,5 +1,5 @@
 import { ConfigProvider } from 'antd';
-import { Chat } from './components/chat';
+import { Chat } from './components/chat-container';
 
 // Styles
 import './App.css';
